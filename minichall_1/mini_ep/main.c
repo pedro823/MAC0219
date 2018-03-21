@@ -1,11 +1,12 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "frog.h"
 
-struct simulate_ret {
+typedef struct simulate_ret {
     int *v;
     int counter;
     double elapsed_time;
-};
+} simulate_ret;
 
 /*
  * Checks if the program has ended in a
@@ -30,7 +31,7 @@ bool check_good_state(int* v, int v_size) {
  * Checks if the program has ended in a
  * bad state.
  */
-bool check_bad_state(int* v, int v_size, mutex_t *jump) {
+bool check_bad_state(int* v, int v_size, pthread_mutex_t *jump) {
     bool ans = true;
     pthread_mutex_lock(jump);
     for (int i = 0; i < v_size && ans; i++) {
@@ -61,8 +62,108 @@ bool check_bad_state(int* v, int v_size, mutex_t *jump) {
     return ans;
 }
 
-// Should return: int *v, int COUNTER, time_t elapsed_time
-struct simulate_ret *simulate(int v_size) {
+void fill_frog(fargs * frog, int position, bool direction, int * v,
+	       int v_size, pthread_barrier_t * barrier, pthread_mutex_t * jump) {
+    frog->position = position;
+    frog->direction = direction;
+    frog->v = v;
+    frog->v_size = v_size;
+    frog->barrier = barrier;
+    frog->jump = jump;
+}
 
 
+/*
+ * Should return: int *v, int COUNTER, time_t elapsed_time
+ */
+simulate_ret *simulate(int v_size) {
+    if (v_size % 2 == 0) {
+	fprintf(stderr, "We can just simulate for odd number of positions");
+	exit(EXIT_FAILURE);
+    }
+    
+    fargs * frog_args;
+    int * vec;
+    pthread_barrier_t * barrier;
+    pthread_t * threads;
+    pthread_mutex_t * mutex;
+    int i;
+    simulate_ret * simulation;
+    clock_t begin, end;
+    begin = clock();
+    
+    frog_args = (fargs *)malloc(sizeof(fargs) * (v_size - 1));
+    vec = (int *)malloc(sizeof(int) * v_size);
+    barrier = (pthread_barrier_t *)malloc(sizeof(pthread_barrier_t));
+    mutex = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t));
+    threads = (pthread_t *)malloc(sizeof(pthread_t) * (v_size - 1));
+    simulation = (simulate_ret *)malloc(sizeof(simulate_ret));
+    
+    for (i = 0; i < v_size; i++) {
+	if (i == (v_size + 1) / 2) continue;
+	bool dir = (i < v_size / 2) ? 1 : 0;
+	fill_frog(&frog_args[i], i, dir, vec, v_size, barrier, mutex);
+    }
+
+    pthread_barrier_init(barrier, NULL, v_size);
+
+    for (int i = 0; i < v_size; i++) {
+	if (i == (v_size + 1) / 2) continue;
+	pthread_create(&threads[i], NULL, frog_func, &frog_args[i]);
+    }
+
+    pthread_barrier_wait(barrier);
+
+    while (COUNTER <= 10);
+
+    printf("Done simulating\n");
+
+    if (check_good_state(vec, v_size)) {
+	printf("Frogs could finish the challenge\n");
+    } else if (check_bad_state(vec, v_size, mutex)) {
+	printf("Frogs could still jump\n");
+    }
+    
+    for (i = 0; i < v_size; i++) {
+	if (i == (v_size + 1) / 2) continue;
+        pthread_cancel(threads[i]);
+    }
+
+    pthread_barrier_destroy(barrier);
+    free(barrier);
+    free(mutex);
+    free(frog_args);
+    free(threads);
+
+    simulation->counter = COUNTER;
+    simulation->v = vec;
+    end = clock();
+    simulation->elapsed_time = (double) (end - begin) / CLOCKS_PER_SEC;
+    
+}
+
+void free_simulation(simulate_ret * simulation) {
+    free(simulation->v);
+    free(simulation);
+}
+
+int main() {
+    int i;
+    double sum = 0;
+    int vec_size = 5;
+    for (i = 0; 1 < 10; i++) {
+	simulate_ret * ret = simulate(vec_size);
+	printf("--> %d %lf\n", ret->counter, ret->elapsed_time);
+	int j;
+	printf("--> ");
+	for (j = 0; j < vec_size; j++) {
+	    printf("%d ", ret->v[j]);
+	}
+	printf("\n");
+	sum += ret->elapsed_time;
+	free_simulation(ret);
+	COUNTER = 0;
+    }
+
+    printf("==> %lf\n", sum);
 }
