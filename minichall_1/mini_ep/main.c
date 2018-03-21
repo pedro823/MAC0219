@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include "frog.h"
 
+struct simulate_ret {
+    int *v;
+    int counter;
+    double elapsed_time;
+};
+
 /*
  * Checks if the program has ended in a
  * good state.
@@ -27,7 +33,7 @@ bool check_good_state(int* v, int v_size) {
 bool check_bad_state(int* v, int v_size, mutex_t *jump) {
     bool ans = true;
     pthread_mutex_lock(jump);
-    for (int i = 0; i < v_size; i++) {
+    for (int i = 0; i < v_size && ans; i++) {
         if (v[i] == -1) {
             // frog goes left
             if (i > 0 && v[i - 1] == 0) {
@@ -53,4 +59,10 @@ bool check_bad_state(int* v, int v_size, mutex_t *jump) {
     }
     pthread_mutex_unlock(jump);
     return ans;
+}
+
+// Should return: int *v, int COUNTER, time_t elapsed_time
+struct simulate_ret *simulate(int v_size) {
+
+
 }
