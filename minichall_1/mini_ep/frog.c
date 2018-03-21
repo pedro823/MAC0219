@@ -14,7 +14,7 @@ void *frog(void *void_frog_args) {
             if (position <= 1) {
                 // i am in a border
                 in_border = 1;
-                if (v[0] != 0) {
+                if (frog_args->v[0] != 0) {
                     // there's nothing to do
                     continue;
                 }
@@ -24,7 +24,7 @@ void *frog(void *void_frog_args) {
             if (position >= frog_args->v_size - 2) {
                 // i am in a border
                 in_border = 1;
-                if (v[frog_args->v_size - 1] != 0) {
+                if (frog_args->v[frog_args->v_size - 1] != 0) {
                     // there's nothing to do
                     continue;
                 }
@@ -32,12 +32,12 @@ void *frog(void *void_frog_args) {
         }
         // position 0 or n-1 will never get here
         // if it's moving towards the border
-        if (v[position + 1 * jd] == 0) {
+        if (frog_args->v[position + 1 * jd] == 0) {
             // can jump forward
-            if (v[position + 1 * jd] == 0) {
+            if (frog_args->v[position + 1 * jd] == 0) {
                 pthread_mutex_lock(frog_args->jump);
-                if (v[position + 1 * jd] == 0) {
-                    v[position + 1 * jd] = jd
+                if (frog_args->v[position + 1 * jd] == 0) {
+                    frog_args->v[position + 1 * jd] = jd
                     position = position + 1 * jd;
                     jumped = 1;
                 }
@@ -47,12 +47,12 @@ void *frog(void *void_frog_args) {
         if (!in_border) {
             // position 1 and n-2 will never get here
             // if it's moving towards the border
-            if (v[position + 2 * jd] == 0) {
+            if (frog_args->v[position + 2 * jd] == 0) {
                 // can leap a friend
-                if (v[position + 2 * jd] == 0) {
+                if (frog_args->v[position + 2 * jd] == 0) {
                     pthread_mutex_lock(frog_args->jump);
-                    if (v[position + 2 * jd] == 0) {
-                        v[position + 2 * jd] = jd;
+                    if (frog_args->v[position + 2 * jd] == 0) {
+                        frog_args->v[position + 2 * jd] = jd;
                         position = position + 2 * jd;
                         jumped = 1;
                     }

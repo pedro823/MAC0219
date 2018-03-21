@@ -18,7 +18,7 @@ struct fargs {
     bool direction; // 0 == goes left, 1 == goes right
     int *v;
     int v_size;
-    mutex_t jump; // Global mutex jump
+    mutex_t *jump; // Global mutex jump
 };
 
 /*
