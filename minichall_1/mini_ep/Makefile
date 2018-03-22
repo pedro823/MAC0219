@@ -1,5 +1,5 @@
 # Breno Helfstein Moura       NUSP: 9790972
-# Pedro Pereira               NUSP: -------
+# Pedro Pereira               NUSP: 9778794
 
 FLAGS = -pthread -Wall -pedantic -g
 OBJS = main.o frog.o
