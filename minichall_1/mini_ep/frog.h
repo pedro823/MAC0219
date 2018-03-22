@@ -1,6 +1,9 @@
-#pragma once
+#ifndef FROG_H
+#define FROG_H
 
 #include <pthread.h>
+#include <stdio.h>
+#include <unistd.h>
 
 #ifndef bool
 #define bool char
@@ -9,20 +12,28 @@
 #endif
 
 // Global
-mutex_t counter_mutex;
-int COUNTER = 0;
-int MAX_COUNTER = 10;
+pthread_mutex_t counter_mutex;
+static const int MAX_COUNTER = 100;
 
-struct fargs {
+typedef struct fargs {
     int position; // Frogs' starting position
     bool direction; // 0 == goes left, 1 == goes right
-    int *v;
+    int * v;
     int v_size;
-    mutex_t *jump; // Global mutex jump
-};
+    int * counter;
+    pthread_barrier_t * barrier;
+    pthread_mutex_t * jump; // Global mutex jump
+} fargs;
+
+/*
+ * check if a position is valid
+ */
+int valid_position(int position, int v_size);
 
 /*
  * initializes frog.
  * void_frog_args is a void* to a struct fargs.
  */
-void *frog(void *void_frog_args);
+void *frog_func(void *void_frog_args);
+
+#endif
