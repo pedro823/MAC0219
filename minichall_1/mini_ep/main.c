@@ -79,7 +79,7 @@ void fill_frog(fargs * frog, int position, bool direction, int * v, int v_size,
  */
 simulate_ret *simulate(int v_size) {
     if (v_size % 2 == 0) {
-        fprintf(stderr, "We can just simulate for odd number of positions");
+        fprintf(stderr, "We can only simulate for odd number of positions");
         exit(EXIT_FAILURE);
     }
 
@@ -102,6 +102,7 @@ simulate_ret *simulate(int v_size) {
     simulation = (simulate_ret *)malloc(sizeof(simulate_ret));
     COUNTER = (int *)malloc(sizeof(int));
     (*COUNTER) = 0;
+    printf("checkpoint 2\n");
 
     for (i = 0; i < v_size; i++) {
         if (i == (v_size + 1) / 2) continue;
@@ -115,7 +116,7 @@ simulate_ret *simulate(int v_size) {
         if (i == (v_size + 1) / 2) continue;
         pthread_create(&threads[i], NULL, frog_func, &frog_args[i]);
     }
-
+    printf("checkpoint 3\n");
     printf("created all threads\n");
 
 
@@ -124,10 +125,16 @@ simulate_ret *simulate(int v_size) {
     printf("Starting simulating\n");
 
     while ((*COUNTER) <= 100) {
-        printf("==> %d\n", *COUNTER);
+        // printf("SIMULATE=%d\n", *COUNTER);
     }
 
     printf("Done simulating %d\n", *COUNTER);
+
+    // destroys threads
+    for (i = 0; i < v_size; i++) {
+        if (i == (v_size + 1) / 2) continue;
+        pthread_cancel(threads[i]);
+    }
 
     if (check_good_state(vec, v_size)) {
         printf("Frogs could finish the challenge\n");
@@ -135,28 +142,24 @@ simulate_ret *simulate(int v_size) {
         printf("Frogs could still jump\n");
     }
 
-    for (i = 0; i < v_size; i++) {
-        if (i == (v_size + 1) / 2) continue;
-        pthread_cancel(threads[i]);
-    }
 
-    pthread_barrier_destroy(barrier);
-    free(barrier);
-    free(mutex);
-    free(frog_args);
-    free(threads);
+    // pthread_barrier_destroy(barrier);
+    // free(mutex);
+    // free(frog_args);
+    // free(threads);
 
     simulation->counter = *COUNTER;
     simulation->v = vec;
     end = clock();
-    simulation->elapsed_time = (double) (end - begin) / CLOCKS_PER_SEC;
-
-
+    // simulation->elapsed_time = (double) (end - begin) / CLOCKS_PER_SEC;
+    simulation->elapsed_time = (double) CLOCKS_PER_SEC;
     free(COUNTER);
+
+    return simulation;
 }
 
 void free_simulation(simulate_ret * simulation) {
-    free(simulation->v);
+    // free(simulation->v);
     free(simulation);
 }
 
@@ -164,18 +167,22 @@ int main() {
     int i;
     double sum = 0;
     int vec_size = 5;
-    for (i = 0; 1 < 10; i++) {
-        simulate_ret * ret = simulate(vec_size);
-        printf("--> %d %lf\n", ret->counter, ret->elapsed_time);
-        int j;
-        printf("--> ");
-        for (j = 0; j < vec_size; j++) {
-            printf("%d ", ret->v[j]);
-        }
-        printf("\n");
-        sum += ret->elapsed_time;
-        free_simulation(ret);
-    }
+    printf("checkpoint 1\n");
+    simulate_ret * ret = simulate(vec_size);
+    printf("--> %d %llf\n", ret->counter, ret->elapsed_time);
+    free_simulation(ret);
+    // for (i = 0; 1 < 10; i++) {
+    //     simulate_ret * ret = simulate(vec_size);
+    //     printf("--> %d %llf\n", ret->counter, ret->elapsed_time);
+    //     int j;
+    //     printf("--> ");
+    //     for (j = 0; j < vec_size; j++) {
+    //         printf("%d ", ret->v[j]);
+    //     }
+    //     printf("\n");
+    //     sum += ret->elapsed_time;
+    //     free_simulation(ret);
+    // }
 
-    printf("==> %lf\n", sum);
+    // printf("==> %lf\n", sum);
 }

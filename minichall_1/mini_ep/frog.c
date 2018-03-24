@@ -20,7 +20,7 @@ void *frog_func(void *void_frog_args) {
     while (1) {
         jumped = 0;
 
-        printf("%d\n", *COUNTER);
+        // printf("COUNTER=%d\n", *COUNTER);
 
         // position 0 or n-1 will never get here
         // if it's moving towards the border
@@ -32,7 +32,7 @@ void *frog_func(void *void_frog_args) {
                     frog_args->v[position + 1 * jd] = jd;
                     frog_args->v[position] = 0;
                     position = position + 1 * jd;
-                    printf("Jumping %d\n", position);
+                    // printf("Jumping %d\n", position);
                     jumped = 1;
                 }
                 pthread_mutex_unlock(frog_args->jump);
@@ -49,7 +49,7 @@ void *frog_func(void *void_frog_args) {
                         frog_args->v[position + 2 * jd] = jd;
                         frog_args->v[position] = 0;
                         position = position + 2 * jd;
-                        printf("Jumping %d\n", position);
+                        // printf("Jumping %d\n", position);
                         jumped = 1;
                     }
                     pthread_mutex_unlock(frog_args->jump);
