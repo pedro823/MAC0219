@@ -5,6 +5,7 @@
 typedef struct simulate_ret {
     int *v;
     int counter;
+    int could_jump;
     double elapsed_time;
 } simulate_ret;
 
@@ -77,7 +78,7 @@ void fill_frog(fargs * frog, int position, bool direction, int * v, int v_size,
 /*
  * Should return: int *v, int COUNTER, time_t elapsed_time
  */
-simulate_ret *simulate(int v_size) {
+simulate_ret *simulate(int v_size, int LIMIT) {
     if (v_size % 2 == 0) {
         fprintf(stderr, "We can only simulate for odd number of positions");
         exit(EXIT_FAILURE);
@@ -98,11 +99,10 @@ simulate_ret *simulate(int v_size) {
     vec = (int *)malloc(sizeof(int) * v_size);
     barrier = (pthread_barrier_t *)malloc(sizeof(pthread_barrier_t));
     mutex = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t));
-    threads = (pthread_t *)malloc(sizeof(pthread_t) * (v_size - 1));
     simulation = (simulate_ret *)malloc(sizeof(simulate_ret));
+    threads = (pthread_t *)malloc(sizeof(pthread_t) * (v_size - 1));
     COUNTER = (int *)malloc(sizeof(int));
     (*COUNTER) = 0;
-    printf("checkpoint 2\n");
 
     //Initializes frogs
     for (i = 0; i < v_size; i++) {
@@ -117,31 +117,20 @@ simulate_ret *simulate(int v_size) {
         fill_frog(&frog_args[i], i, dir, vec, v_size, COUNTER, barrier, mutex);
     }
 
-    printf("==> Vector:\n");
-    for (i = 0; i < v_size; i++) {
-        printf("%d ", (frog_args[0].v)[i]);
-    }
-    printf("\n");
-
     pthread_barrier_init(barrier, NULL, v_size);
 
     for (int i = 0; i < v_size; i++) {
         if (i == (v_size + 1) / 2) continue;
         pthread_create(&threads[i], NULL, frog_func, &frog_args[i]);
     }
-    printf("checkpoint 3\n");
-    printf("created all threads\n");
 
 
     pthread_barrier_wait(barrier);
 
-    printf("Starting simulating\n");
 
-    while ((*COUNTER) <= 1000) {
+    while ((*COUNTER) <= LIMIT) {
         // printf("SIMULATE=%d\n", *COUNTER);
     }
-
-    printf("Done simulating %d\n", *COUNTER);
 
     // destroys threads
     for (i = 0; i < v_size; i++) {
@@ -151,43 +140,55 @@ simulate_ret *simulate(int v_size) {
 
     if (check_good_state(vec, v_size)) {
         printf("Frogs could finish the challenge\n");
-    } else if (check_bad_state(vec, v_size, mutex)) {
+    } 
+    
+    if (check_bad_state(vec, v_size, mutex)) {
         printf("Frogs could still jump\n");
+        simulation->could_jump = 0;
+    } else {
+        printf("frogs in deadlock\n");   
+        simulation->could_jump = 1;
     }
+    printf("Done simulating %d\n", *COUNTER);
 
-
-    // pthread_barrier_destroy(barrier);
-    // free(mutex);
-    // free(frog_args);
-    // free(threads);
+    pthread_barrier_destroy(barrier);
+    free(mutex);
+    free(frog_args);
+    free(threads);
 
     simulation->counter = *COUNTER;
     simulation->v = vec;
     end = clock();
-    // simulation->elapsed_time = (double) (end - begin) / CLOCKS_PER_SEC;
-    simulation->elapsed_time = (double) CLOCKS_PER_SEC;
-    free(COUNTER);
-
-    printf("Vector:\n");
-    for (i = 0; i < v_size; i++) {
-        printf("%d ", vec[i]);
-    }
-    printf("\n");
+    simulation->elapsed_time = (double) (end - begin) / CLOCKS_PER_SEC;
 
     return simulation;
 }
 
 void free_simulation(simulate_ret * simulation) {
-    // free(simulation->v);
+    free(simulation->v);
     free(simulation);
+}
+
+int binary_search(int v_size) {
+    int l = 1, r = 1000;
+    while (l < r) {
+        int mid = (l + r + 1) / 2;
+        simulate_ret * simulation = simulate(v_size, mid);
+
+        if (simulation->could_jump) {
+            r = mid - 1;
+        } else l = mid;
+
+        free_simulation(simulation);
+    }
+    return l;
 }
 
 int main() {
     int i;
     double sum = 0;
     int vec_size = 5;
-    printf("checkpoint 1\n");
-    simulate_ret * ret = simulate(vec_size);
+    simulate_ret * ret = simulate(vec_size, MAX_COUNTER);
     printf("--> %d %lf\n", ret->counter, ret->elapsed_time);
     free_simulation(ret);
     // for (i = 0; 1 < 10; i++) {

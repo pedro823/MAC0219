@@ -24,39 +24,22 @@ void *frog_func(void *void_frog_args) {
     int v_size = frog_args->v_size;
     int * COUNTER = frog_args->counter;
 
-    printf("printing from thread %d\n", position);
-    printvector(frog_args->v, frog_args->v_size);
-
     pthread_barrier_wait(barrier);
     while (1) {
         jumped = 0;
-
-        if (!valid_position(position, frog_args->v_size)) {
-            printf("I AM NOT IN A VALID POSITION: %d\n", position);
-            break;
-        }
-        if (frog_args->v[position] != jd) {
-            printf("I am in position %d, i should be %d but i am %d\n", position, jd, frog_args->v[position]);
-            break;
-        }
-        // printf("COUNTER=%d\n", *COUNTER);
 
         // position 0 or n-1 will never get here
         // if it's moving towards the border
         if (valid_position(position + 1 * jd, v_size) && frog_args->v[position + 1 * jd] == 0) {
             // can jump forward
-            printf("ENTERED IF11\n");
             if (frog_args->v[position + 1 * jd] == 0) {
                 pthread_mutex_lock(frog_args->jump);
                 if (frog_args->v[position + 1 * jd] == 0) {
-                    printf("ENTERED IF12\n");
                     frog_args->v[position + 1 * jd] = jd;
                     frog_args->v[position] = 0;
                     position = position + 1 * jd;
-                    // printf("Jumping %d\n", position);
                     jumped = 1;
                 }
-                printvector(frog_args->v, frog_args->v_size);
                 pthread_mutex_unlock(frog_args->jump);
             }
         }
@@ -65,18 +48,14 @@ void *frog_func(void *void_frog_args) {
             // if it's moving towards the border
             if (valid_position(position + 2 * jd, v_size) && frog_args->v[position + 2 * jd] == 0) {
                 // can leap a friend
-                printf("ENTERED IF21\n");
                 if (frog_args->v[position + 2 * jd] == 0) {
                     pthread_mutex_lock(frog_args->jump);
                     if (frog_args->v[position + 2 * jd] == 0) {
-                        printf("ENTERED IF22\n");
                         frog_args->v[position + 2 * jd] = jd;
                         frog_args->v[position] = 0;
                         position = position + 2 * jd;
-                        // printf("Jumping %d\n", position);
                         jumped = 1;
                     }
-                    printvector(frog_args->v, frog_args->v_size);
                     pthread_mutex_unlock(frog_args->jump);
                 }
             }
@@ -85,7 +64,6 @@ void *frog_func(void *void_frog_args) {
         if (!jumped) {
             pthread_mutex_lock(&counter_mutex);
             (*COUNTER)++;
-            printvector(frog_args->v, frog_args->v_size);
             pthread_mutex_unlock(&counter_mutex);
         }
         else {
