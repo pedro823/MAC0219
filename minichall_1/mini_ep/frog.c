@@ -7,7 +7,7 @@ int valid_position(int position, int v_size) {
 }
 
 void *frog_func(void *void_frog_args) {
-    fargs *frog_args = (fargs *) void_frog_args;
+    fargs * frog_args = (fargs *) void_frog_args;
     int position = frog_args->position;
     // jump direction
     int jd = frog_args->direction ? 1 : -1;
@@ -20,6 +20,14 @@ void *frog_func(void *void_frog_args) {
     while (1) {
         jumped = 0;
 
+        if (!valid_position(position, frog_args->v_size)) {
+            printf("I AM NOT IN A VALID POSITION: %d\n", position);
+            break;
+        }
+        if (frog_args->v[position] != jd) {
+            printf("I am in position %d, i should be %d but i am %d\n", position, jd, frog_args->v[position]);
+            break;
+        }
         // printf("COUNTER=%d\n", *COUNTER);
 
         // position 0 or n-1 will never get here
@@ -68,4 +76,5 @@ void *frog_func(void *void_frog_args) {
             pthread_mutex_unlock(&counter_mutex);
         }
     }
+    return NULL;
 }

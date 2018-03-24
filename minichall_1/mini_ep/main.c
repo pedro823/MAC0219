@@ -104,6 +104,19 @@ simulate_ret *simulate(int v_size) {
     (*COUNTER) = 0;
     printf("checkpoint 2\n");
 
+    //Initializes frogs
+    for (i = 0; i < v_size; i++) {
+        if (i < v_size / 2) vec[i] = 1;
+        else if (i >= (v_size + 1) / 2) vec[i] = -1;
+        else vec[i] = 0;
+    }
+
+    printf("Vector:\n");
+    for (i = 0; i < v_size; i++) {
+        printf("%d ", vec[i]);
+    }
+    printf("\n");
+
     for (i = 0; i < v_size; i++) {
         if (i == (v_size + 1) / 2) continue;
         bool dir = (i < v_size / 2) ? 1 : 0;
@@ -154,6 +167,12 @@ simulate_ret *simulate(int v_size) {
     // simulation->elapsed_time = (double) (end - begin) / CLOCKS_PER_SEC;
     simulation->elapsed_time = (double) CLOCKS_PER_SEC;
     free(COUNTER);
+
+    printf("Vector:\n");
+    for (i = 0; i < v_size; i++) {
+        printf("%d ", vec[i]);
+    }
+    printf("\n");
 
     return simulation;
 }
