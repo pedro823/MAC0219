@@ -137,7 +137,7 @@ simulate_ret *simulate(int v_size) {
 
     printf("Starting simulating\n");
 
-    while ((*COUNTER) <= 100) {
+    while ((*COUNTER) <= 1000) {
         // printf("SIMULATE=%d\n", *COUNTER);
     }
 
