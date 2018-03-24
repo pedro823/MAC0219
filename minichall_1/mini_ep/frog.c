@@ -24,6 +24,9 @@ void *frog_func(void *void_frog_args) {
     int v_size = frog_args->v_size;
     int * COUNTER = frog_args->counter;
 
+    printf("printing from thread %d\n", position);
+    printvector(frog_args->v, frog_args->v_size);
+
     pthread_barrier_wait(barrier);
     while (1) {
         jumped = 0;

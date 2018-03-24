@@ -94,7 +94,7 @@ simulate_ret *simulate(int v_size) {
     clock_t begin, end;
     begin = clock();
 
-    frog_args = (fargs *)malloc(sizeof(fargs) * (v_size - 1));
+    frog_args = (fargs *)malloc(sizeof(fargs) * v_size);
     vec = (int *)malloc(sizeof(int) * v_size);
     barrier = (pthread_barrier_t *)malloc(sizeof(pthread_barrier_t));
     mutex = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t));
@@ -111,17 +111,17 @@ simulate_ret *simulate(int v_size) {
         else vec[i] = 0;
     }
 
-    printf("Vector:\n");
-    for (i = 0; i < v_size; i++) {
-        printf("%d ", vec[i]);
-    }
-    printf("\n");
-
     for (i = 0; i < v_size; i++) {
         if (i == (v_size + 1) / 2) continue;
         bool dir = (i < v_size / 2) ? 1 : 0;
         fill_frog(&frog_args[i], i, dir, vec, v_size, COUNTER, barrier, mutex);
     }
+
+    printf("==> Vector:\n");
+    for (i = 0; i < v_size; i++) {
+        printf("%d ", (frog_args[0].v)[i]);
+    }
+    printf("\n");
 
     pthread_barrier_init(barrier, NULL, v_size);
 
@@ -188,7 +188,7 @@ int main() {
     int vec_size = 5;
     printf("checkpoint 1\n");
     simulate_ret * ret = simulate(vec_size);
-    printf("--> %d %llf\n", ret->counter, ret->elapsed_time);
+    printf("--> %d %lf\n", ret->counter, ret->elapsed_time);
     free_simulation(ret);
     // for (i = 0; 1 < 10; i++) {
     //     simulate_ret * ret = simulate(vec_size);
