@@ -13,7 +13,7 @@
 
 // Global
 pthread_mutex_t counter_mutex;
-static const int MAX_COUNTER = 100;
+static const int MAX_COUNTER = 1;
 
 typedef struct fargs {
     int position; // Frogs' starting position
@@ -21,6 +21,7 @@ typedef struct fargs {
     int * v;
     int v_size;
     int * counter;
+    int * stop;
     pthread_barrier_t * barrier;
     pthread_mutex_t * jump; // Global mutex jump
 } fargs;

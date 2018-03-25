@@ -23,9 +23,10 @@ void *frog_func(void *void_frog_args) {
     bool jumped;
     int v_size = frog_args->v_size;
     int * COUNTER = frog_args->counter;
+    int * stop_condition = frog_args->stop;
 
     pthread_barrier_wait(barrier);
-    while (1) {
+    while (!(*stop_condition)) {
         jumped = 0;
 
         // position 0 or n-1 will never get here
@@ -63,16 +64,14 @@ void *frog_func(void *void_frog_args) {
 
         if (!jumped) {
             pthread_mutex_lock(&counter_mutex);
-            (*COUNTER)++;
+            (*COUNTER) = (*COUNTER) + 1;
             pthread_mutex_unlock(&counter_mutex);
         }
         else {
             pthread_mutex_lock(&counter_mutex);
             (*COUNTER) = 0;
-            printvector(frog_args->v, frog_args->v_size);
             pthread_mutex_unlock(&counter_mutex);
         }
-        printvector(frog_args->v, frog_args->v_size);
     }
     return NULL;
 }

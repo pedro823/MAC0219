@@ -1,0 +1,12 @@
+    Para a implementação do EP2 em que cada rã é uma thread usamos dois Mutex (um para sapos e rãs pulando e
+outro para o contador) e uma barreira de sincronização.
+    Primeiro inicializamos todos os sapos e rãs e fazemos eles esperarem na barreira, até que todos estejam 
+prontos para iniciar (e assim iniciarem juntos). Após isso fazemos com que cada sapo e rã tente pular
+(primeiro tentando fazer um pulo de tamanho 1 e depois um pulo de tamanho 2), quando uma rã ve que
+possivelmente pode pular ela usa o mutex 'jump' para fazer a verificação e pular caso a verificação seja
+válida. Ao final cada thread de sapo e rã vê se conseguiu pular ou não e incrementa o contador caso não
+conseguiu pular e zera o contador caso contrário, sempre utilizando o mutex 'counter' para isso.
+    Também fizemos algumas funções auxiliares para nos ajudar a fazer verificações sobre o estado dos
+sapos e das rãs. A função 'check_good_state' verifica se os sapos e rãs terminaram em um estado em que as
+rãs estão todas na direita e os sapos a esquerda (isto é, invertido). A função 'check_bad_state' verifica se
+os sapos e rãs estão em estado de deadlock (isto é, nenhum sapo e nenhuma rã consegue pular).

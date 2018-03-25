@@ -64,12 +64,13 @@ bool check_bad_state(int* v, int v_size, pthread_mutex_t *jump) {
 }
 
 void fill_frog(fargs * frog, int position, bool direction, int * v, int v_size,
-        int * counter, pthread_barrier_t * barrier, pthread_mutex_t * jump) {
+        int * counter, int * stop, pthread_barrier_t * barrier, pthread_mutex_t * jump) {
     frog->position = position;
     frog->direction = direction;
     frog->v = v;
     frog->v_size = v_size;
     frog->counter = counter;
+    frog->stop = stop;
     frog->barrier = barrier;
     frog->jump = jump;
 }
@@ -91,6 +92,7 @@ simulate_ret *simulate(int v_size, int LIMIT) {
     pthread_mutex_t * mutex;
     int i;
     int * COUNTER;
+    int * stop;
     simulate_ret * simulation;
     clock_t begin, end;
     begin = clock();
@@ -100,9 +102,12 @@ simulate_ret *simulate(int v_size, int LIMIT) {
     barrier = (pthread_barrier_t *)malloc(sizeof(pthread_barrier_t));
     mutex = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t));
     simulation = (simulate_ret *)malloc(sizeof(simulate_ret));
-    threads = (pthread_t *)malloc(sizeof(pthread_t) * (v_size));
+    threads = (pthread_t *)malloc(sizeof(pthread_t) * v_size);
     COUNTER = (int *)malloc(sizeof(int));
+    stop = (int *)malloc(sizeof(int));
+
     (*COUNTER) = 0;
+    (*stop) = 0;
 
     //Initializes frogs
     for (i = 0; i < v_size; i++) {
@@ -114,7 +119,7 @@ simulate_ret *simulate(int v_size, int LIMIT) {
     for (i = 0; i < v_size; i++) {
         if (i == (v_size + 1) / 2) continue;
         bool dir = (i < v_size / 2) ? 1 : 0;
-        fill_frog(&frog_args[i], i, dir, vec, v_size, COUNTER, barrier, mutex);
+        fill_frog(&frog_args[i], i, dir, vec, v_size, COUNTER, stop, barrier, mutex);
     }
 
     pthread_barrier_init(barrier, NULL, v_size);
@@ -130,12 +135,15 @@ simulate_ret *simulate(int v_size, int LIMIT) {
 
     while ((*COUNTER) <= LIMIT) {
         printf("counter=%d\n", *COUNTER);
+        sleep(1);
     } // waits for counter
+
+    (*stop) = 1;
 
     // destroys threads
     for (i = 0; i < v_size; i++) {
         if (i == (v_size + 1) / 2) continue;
-        pthread_cancel(threads[i]);
+        pthread_join(threads[i], NULL);
     }
 
     if (check_good_state(vec, v_size)) {
@@ -169,22 +177,6 @@ void free_simulation(simulate_ret * simulation) {
     free(simulation);
 }
 
-int binary_search(int v_size) {
-    int l = 1, r = 1000;
-    while (l < r) {
-        int mid = (l + r + 1) / 2;
-        printf("mid=%d\n", mid);
-        simulate_ret * simulation = simulate(v_size, mid);
-
-        if (simulation->could_jump) {
-            r = mid - 1;
-        } else l = mid;
-
-        free_simulation(simulation);
-    }
-    return l;
-}
-
 int main() {
     int i, counter;
     double sum = 0;
@@ -192,20 +184,4 @@ int main() {
     simulate_ret * ret = simulate(vec_size, MAX_COUNTER);
     printf("--> %d %lf\n", ret->counter, ret->elapsed_time);
     free_simulation(ret);
-    counter = binary_search(5);
-    // printf("finalCounter=%d\n", counter);
-    // for (i = 0; 1 < 10; i++) {
-    //     simulate_ret * ret = simulate(vec_size);
-    //     printf("--> %d %llf\n", ret->counter, ret->elapsed_time);
-    //     int j;
-    //     printf("--> ");
-    //     for (j = 0; j < vec_size; j++) {
-    //         printf("%d ", ret->v[j]);
-    //     }
-    //     printf("\n");
-    //     sum += ret->elapsed_time;
-    //     free_simulation(ret);
-    // }
-
-    // printf("==> %lf\n", sum);
 }
