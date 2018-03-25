@@ -25,8 +25,6 @@ void *frog_func(void *void_frog_args) {
     int * COUNTER = frog_args->counter;
     int * stop_condition = frog_args->stop;
 
-    printf("Incializando %d\n", position);
-
     pthread_barrier_wait(barrier);
     while (!(*stop_condition)) {
         jumped = 0;
@@ -40,7 +38,6 @@ void *frog_func(void *void_frog_args) {
                 if (frog_args->v[position + 1 * jd] == 0) {
                     frog_args->v[position + 1 * jd] = jd;
                     frog_args->v[position] = 0;
-                    printf("Pulando de %d para %d\n", position, position + 1 * jd);
                     position = position + 1 * jd;
                     jumped = 1;
                 }
@@ -57,7 +54,6 @@ void *frog_func(void *void_frog_args) {
                     if (frog_args->v[position + 2 * jd] == 0) {
                         frog_args->v[position + 2 * jd] = jd;
                         frog_args->v[position] = 0;
-                        printf("Pulando de %d para %d\n", position, position + 2 * jd);
                         position = position + 2 * jd;
                         jumped = 1;
                     }
@@ -78,7 +74,5 @@ void *frog_func(void *void_frog_args) {
         }
     }
 
-    printf("Terminando thread em %d\n", position);
-    //printvector(frog_args->v, v_size);
     return NULL;
 }

@@ -20,7 +20,7 @@ bool check_good_state(int* v, int v_size) {
             return false;
         }
     }
-    for (i = (v_size + 3) / 2; i < v_size; i++) {
+    for (i = v_size/2 + 1; i < v_size; i++) {
         if (v[i] != 1) {
             return false;
         }
@@ -76,6 +76,9 @@ bool check_deadlock(int* v, int v_size, pthread_mutex_t *jump) {
     return ans;
 }
 
+/*
+ * Fill the frog struct
+ */
 void fill_frog(fargs * frog, int position, bool direction, int * v, int v_size,
         int * counter, int * stop, pthread_barrier_t * barrier, pthread_mutex_t * jump) {
     frog->position = position;
@@ -148,7 +151,7 @@ simulate_ret *simulate(int v_size, int LIMIT) {
 
 
     while ((*COUNTER) <= LIMIT) {
-        printf("counter=%d\n", *COUNTER);
+        //printf("counter=%d\n", *COUNTER);
     } // waits for counter
 
     (*stop) = 1;
@@ -193,7 +196,7 @@ void free_simulation(simulate_ret * simulation) {
 int main() {
     int i, counter;
     double sum = 0;
-    int vec_size = 5;
+    int vec_size = 3;
     simulate_ret * ret = simulate(vec_size, MAX_COUNTER);
     printf("--> %d %lf\n", ret->counter, ret->elapsed_time);
     free_simulation(ret);
