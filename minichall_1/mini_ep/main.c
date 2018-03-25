@@ -109,6 +109,8 @@ simulate_ret *simulate(int v_size, int LIMIT) {
     (*COUNTER) = 0;
     (*stop) = 0;
 
+    // initializes mutex
+    pthread_mutex_init(mutex, NULL);
     //Initializes frogs
     for (i = 0; i < v_size; i++) {
         if (i < v_size / 2) vec[i] = 1;
