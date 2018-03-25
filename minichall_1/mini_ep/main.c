@@ -196,7 +196,7 @@ void free_simulation(simulate_ret * simulation) {
 int main() {
     int i, counter;
     double sum = 0;
-    int vec_size = 3;
+    int vec_size = 101;
     simulate_ret * ret = simulate(vec_size, MAX_COUNTER);
     printf("--> %d %lf\n", ret->counter, ret->elapsed_time);
     free_simulation(ret);
