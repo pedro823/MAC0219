@@ -135,7 +135,6 @@ simulate_ret *simulate(int v_size, int LIMIT) {
 
     while ((*COUNTER) <= LIMIT) {
         printf("counter=%d\n", *COUNTER);
-        sleep(1);
     } // waits for counter
 
     (*stop) = 1;

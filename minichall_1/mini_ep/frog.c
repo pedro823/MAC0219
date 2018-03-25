@@ -73,5 +73,8 @@ void *frog_func(void *void_frog_args) {
             pthread_mutex_unlock(&counter_mutex);
         }
     }
+
+    printf("Terminando thread %d\n", position);
+    printvector(frog_args->v, v_size);
     return NULL;
 }
