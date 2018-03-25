@@ -100,7 +100,7 @@ simulate_ret *simulate(int v_size, int LIMIT) {
     barrier = (pthread_barrier_t *)malloc(sizeof(pthread_barrier_t));
     mutex = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t));
     simulation = (simulate_ret *)malloc(sizeof(simulate_ret));
-    threads = (pthread_t *)malloc(sizeof(pthread_t) * (v_size - 1));
+    threads = (pthread_t *)malloc(sizeof(pthread_t) * (v_size));
     COUNTER = (int *)malloc(sizeof(int));
     (*COUNTER) = 0;
 
@@ -129,8 +129,8 @@ simulate_ret *simulate(int v_size, int LIMIT) {
 
 
     while ((*COUNTER) <= LIMIT) {
-        // printf("SIMULATE=%d\n", *COUNTER);
-    }
+        printf("counter=%d\n", *COUNTER);
+    } // waits for counter
 
     // destroys threads
     for (i = 0; i < v_size; i++) {
@@ -140,16 +140,16 @@ simulate_ret *simulate(int v_size, int LIMIT) {
 
     if (check_good_state(vec, v_size)) {
         printf("Frogs could finish the challenge\n");
-    } 
-    
+    }
+
     if (check_bad_state(vec, v_size, mutex)) {
         printf("Frogs could still jump\n");
         simulation->could_jump = 0;
     } else {
-        printf("frogs in deadlock\n");   
+        printf("frogs in deadlock\n");
         simulation->could_jump = 1;
     }
-    printf("Done simulating %d\n", *COUNTER);
+    printf("Done simulating final_counter=%d\n", *COUNTER);
 
     pthread_barrier_destroy(barrier);
     free(mutex);
@@ -173,6 +173,7 @@ int binary_search(int v_size) {
     int l = 1, r = 1000;
     while (l < r) {
         int mid = (l + r + 1) / 2;
+        printf("mid=%d\n", mid);
         simulate_ret * simulation = simulate(v_size, mid);
 
         if (simulation->could_jump) {
@@ -185,12 +186,14 @@ int binary_search(int v_size) {
 }
 
 int main() {
-    int i;
+    int i, counter;
     double sum = 0;
     int vec_size = 5;
     simulate_ret * ret = simulate(vec_size, MAX_COUNTER);
     printf("--> %d %lf\n", ret->counter, ret->elapsed_time);
     free_simulation(ret);
+    counter = binary_search(5);
+    // printf("finalCounter=%d\n", counter);
     // for (i = 0; 1 < 10; i++) {
     //     simulate_ret * ret = simulate(vec_size);
     //     printf("--> %d %llf\n", ret->counter, ret->elapsed_time);

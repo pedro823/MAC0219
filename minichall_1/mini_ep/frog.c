@@ -72,6 +72,7 @@ void *frog_func(void *void_frog_args) {
             printvector(frog_args->v, frog_args->v_size);
             pthread_mutex_unlock(&counter_mutex);
         }
+        printvector(frog_args->v, frog_args->v_size);
     }
     return NULL;
 }
