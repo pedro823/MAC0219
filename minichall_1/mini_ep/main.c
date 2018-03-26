@@ -185,12 +185,35 @@ void free_simulation(simulate_ret * simulation) {
     free(simulation);
 }
 
+float statistics(int v_size, int max_counter, int number_of_tries, bool print) {
+    float miss_percentage = 0;
+    float good_state_percentage = 0;
+    struct simulate_ret * ret;
+    for (int i = 0; i < number_of_tries; i++) {
+        ret = simulate(v_size, max_counter);
+        miss_percentage += (float) ret->could_jump / number_of_tries;
+        good_state_percentage += (float) check_good_state(ret->v, v_size) / number_of_tries;
+        free_simulation(ret);
+    }
+    if (print) {
+        printf("####################################################################\n");
+        printf("With max counter = %d and pond length = %d,\n"
+        "the counter predicted that the pond was stuck with %2.2f%% accuracy.\n",
+        max_counter, (1 - miss_percentage) * 100, v_size);
+        printf("The pond ended in a good state %2.2f%% of the time.\n",
+        good_state_percentage * 100);
+        printf("Number of tries = %d\n", number_of_tries);
+        printf("####################################################################\n");
+    }
+    return (1 - miss_percentage) * 100;
+}
+
 int annealing(int v_size, int initial_counter, int anneal_rate) {
     int guess = initial_counter;
-    struct simulate_ret * ret;
+    float mean;
     while (anneal_rate > 0) {
-        ret = simulate(v_size, guess);
-        if (ret->could_jump) {
+        mean = statistics(v_size, guess, 5, false);
+        if (mean < 80) {
             // spikes up again
             guess += 5 * anneal_rate;
         }
@@ -202,29 +225,14 @@ int annealing(int v_size, int initial_counter, int anneal_rate) {
         if (guess < 20) {
             // we've gone too low...
             // goes a bit towards the counter's end position
-            guess += 0.1 * (ret->counter - guess);
+            guess = abs(guess);
+            guess += 100 * guess;
         }
         anneal_rate -= 20;
         printf("anneal_guess=%d\n", guess);
-        free_simulation(ret);
     }
     printf("Final annealing guess = %d\n", guess);
     return guess;
-}
-
-void statistics(int v_size, int max_counter, int number_of_tries) {
-    float miss_percentage = 0;
-    struct simulate_ret * ret;
-    for (int i = 0; i < number_of_tries; i++) {
-        ret = simulate(v_size, max_counter);
-        miss_percentage += (float) ret->could_jump / number_of_tries;
-        free_simulation(ret);
-    }
-    printf("#################################################################\n");
-    printf("With max counter = %d and pond length = %d,\n"
-           "the counter predicts that the pond is stuck with %2.2f%% accuracy.\n",
-           max_counter, (1 - miss_percentage) * 100);
-    printf("#################################################################\n");
 }
 
 int main(int argc, char** argv) {
@@ -245,5 +253,5 @@ int main(int argc, char** argv) {
     // free_simulation(ret);
 
     // RUNNING 1000 SIMULATIONS:
-    statistics(vec_size, counter_guess, 1000);
+    statistics(vec_size, counter_guess, 200, true);
 }
