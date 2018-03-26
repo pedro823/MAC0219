@@ -10,7 +10,7 @@ EXEC = main
 all: run
 
 run: $(OBJS)
-	$(CC) $(FLAGS) $^ -o main
+	$(CC) $(FLAGS) $^ -o main -lm
 	make clean
 	./main
 

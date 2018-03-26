@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <math.h>
 #include "frog.h"
 
 typedef struct simulate_ret {
@@ -26,14 +28,6 @@ bool check_good_state(int* v, int v_size) {
         }
     }
     return true;
-}
-
-void print_vector(int * v, int v_size) {
-    printf("\n[");
-    for (int i = 0; i < v_size; i++) {
-        printf("%d ", v[i]);
-    }
-    printf("]\n");
 }
 
 /*
@@ -71,7 +65,6 @@ bool check_deadlock(int* v, int v_size, pthread_mutex_t *jump) {
             }
         }
     }
-    print_vector(v, v_size);
     pthread_mutex_unlock(jump);
     return ans;
 }
@@ -146,13 +139,9 @@ simulate_ret *simulate(int v_size, int LIMIT) {
         pthread_create(&threads[i], NULL, frog_func, &frog_args[i]);
     }
 
-
     pthread_barrier_wait(barrier);
 
-
-    while ((*COUNTER) <= LIMIT) {
-        //printf("counter=%d\n", *COUNTER);
-    } // waits for counter
+    while ((*COUNTER) <= LIMIT); // waits for counter
 
     (*stop) = 1;
 
@@ -163,24 +152,27 @@ simulate_ret *simulate(int v_size, int LIMIT) {
     }
 
     if (check_good_state(vec, v_size)) {
-        printf("Frogs could finish the challenge\n");
+        printf("Frogs ended in a good state\n");
+        simulation->could_jump = 0;
     }
-
-    if (check_deadlock(vec, v_size, mutex)) {
+    else if (check_deadlock(vec, v_size, mutex)) {
         printf("frogs in deadlock\n");
         simulation->could_jump = 0;
     } else {
         printf("Frogs could still jump\n");
         simulation->could_jump = 1;
     }
-    printf("Done simulating final_counter=%d\n", *COUNTER);
+
+    printf("final counter = %d\n", *COUNTER);
+    simulation->counter = *COUNTER;
 
     pthread_barrier_destroy(barrier);
     free(mutex);
     free(frog_args);
     free(threads);
+    free(stop);
+    free(COUNTER);
 
-    simulation->counter = *COUNTER;
     simulation->v = vec;
     end = clock();
     simulation->elapsed_time = (double) (end - begin) / CLOCKS_PER_SEC;
@@ -193,11 +185,65 @@ void free_simulation(simulate_ret * simulation) {
     free(simulation);
 }
 
-int main() {
+int annealing(int v_size, int initial_counter, int anneal_rate) {
+    int guess = initial_counter;
+    struct simulate_ret * ret;
+    while (anneal_rate > 0) {
+        ret = simulate(v_size, guess);
+        if (ret->could_jump) {
+            // spikes up again
+            guess += 5 * anneal_rate;
+        }
+        else {
+            // goes down with the log
+            guess -= 0.2 * log(guess) * anneal_rate;
+        }
+        // guess moves a bit towards the counter's final position
+        if (guess < 20) {
+            // we've gone too low...
+            // goes a bit towards the counter's end position
+            guess += 0.1 * (ret->counter - guess);
+        }
+        anneal_rate -= 20;
+        printf("anneal_guess=%d\n", guess);
+        free_simulation(ret);
+    }
+    printf("Final annealing guess = %d\n", guess);
+    return guess;
+}
+
+void statistics(int v_size, int max_counter, int number_of_tries) {
+    float miss_percentage = 0;
+    struct simulate_ret * ret;
+    for (int i = 0; i < number_of_tries; i++) {
+        ret = simulate(v_size, max_counter);
+        miss_percentage += (float) ret->could_jump / number_of_tries;
+        free_simulation(ret);
+    }
+    printf("#################################################################\n");
+    printf("With max counter = %d and pond length = %d,\n"
+           "the counter predicts that the pond is stuck with %2.2f%% accuracy.\n",
+           max_counter, (1 - miss_percentage) * 100);
+    printf("#################################################################\n");
+}
+
+int main(int argc, char** argv) {
     int i, counter;
     double sum = 0;
-    int vec_size = 3;
-    simulate_ret * ret = simulate(vec_size, MAX_COUNTER);
-    printf("--> %d %lf\n", ret->counter, ret->elapsed_time);
-    free_simulation(ret);
+    int vec_size = 5;
+    int counter_guess = MAX_COUNTER;
+    if (argc > 1) {
+        vec_size = atoi(argv[1]);
+        if (argc > 2 && !strcmp(argv[2], "anneal")) {
+            counter_guess = annealing(vec_size, 10000, 1000);
+        }
+    }
+    // HOW TO RUN A SINGLE SIMULATION:
+    // simulate_ret * ret = simulate(vec_size, MAX_COUNTER);
+    // printvector(ret->v, vec_size);
+    // printf("elapsed time %lfs\n", ret->counter, ret->elapsed_time);
+    // free_simulation(ret);
+
+    // RUNNING 1000 SIMULATIONS:
+    statistics(vec_size, counter_guess, 1000);
 }

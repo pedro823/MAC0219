@@ -9,7 +9,11 @@ int valid_position(int position, int v_size) {
 void printvector(int * v, int v_size) {
     printf("\n[");
     for (int i = 0; i < v_size; i++) {
-        printf("%d ", v[i]);
+        if (i == 0) {
+            printf("%d", v[i]);
+        } else {
+            printf(" %d", v[i]);
+        }
     }
     printf("]\n");
 }

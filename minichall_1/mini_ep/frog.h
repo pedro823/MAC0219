@@ -37,4 +37,9 @@ int valid_position(int position, int v_size);
  */
 void *frog_func(void *void_frog_args);
 
+/*
+ * Prints frog vector.
+ */
+void printvector(int * v, int v_size);
+
 #endif
