@@ -7,7 +7,9 @@ EXEC = main
 
 .PHONY: clean
 
-all: run
+all: $(OBJS)
+	$(CC) $(FLAGS) $^ -o main -lm
+	make clean
 
 run: $(OBJS)
 	$(CC) $(FLAGS) $^ -o main -lm

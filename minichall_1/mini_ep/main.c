@@ -89,7 +89,7 @@ void fill_frog(fargs * frog, int position, bool direction, int * v, int v_size,
  */
 simulate_ret *simulate(int v_size, int LIMIT) {
     if (v_size % 2 == 0) {
-        fprintf(stderr, "We can only simulate for odd number of positions");
+        fprintf(stderr, "We can only simulate for odd number of positions\n");
         exit(EXIT_FAILURE);
     }
 
@@ -221,7 +221,6 @@ int annealing(int v_size, int initial_counter, int anneal_rate) {
             // goes down with the log
             guess -= 0.2 * log(guess) * anneal_rate;
         }
-        // guess moves a bit towards the counter's final position
         if (guess < 20) {
             // we've gone too low...
             // goes a bit towards the counter's end position
