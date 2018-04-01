@@ -1,0 +1,53 @@
+# Pedro Leyton Pereira - NUSP: 9778794
+# Breno Helfstein Moura - NUSP: 9790972
+
+	Para a implementação desse EP, utilizamos dois mutexes e uma barreira de sincronização: um mutex para
+permitir os pulos dos sapos e rãs, um mutex para atualizar o contador global, e uma barreira de sincronização
+para garantir que todos os sapos tenham sido criados antes de começarem a pular.
+
+	Primeiro inicializamos todos os sapos e rãs, depois liberamos a barreira de sincronização para que eles tentem
+pular. Cada réptil tenta pular primeiramente um pulo de tamanho 1 e depois um pulo de tamanho 2. A checagem de
+pular é feita duas vezes: a primeira sem travar o mutex de pulo e a segunda após travá-lo. Assim, garante-se a
+corretude do programa e ao mesmo tempo garante algum bônus de velocidade.
+
+	O contador é incrementado toda vez que um réptil não consegue pular, e resetado quando algum deles pula. Caso
+o contador esteja maior que um número N, o programa interrompe a simulação.
+
+#### Escolhendo um bom N: Annealing
+
+	Para estimar um N bom para nosso programa, utilizamos 3 tamanhos de vetor de pedrinhas diferentes:
+v_size = 5, v_size = 11, e v_size = 101. Fizemos um esquema de começar com N = 1000 e ir abaixando o número
+caso o programa realmente tenha entrado em deadlock. Um esquema inspirado no método de "Têmpera simulada" de
+busca de caminho em inteligência artificial (Simulated annealing: https://pt.wikipedia.org/wiki/Simulated_annealing).
+O conceito é simples: Tira-se uma amostra estatística de 5 simulações com o N estimado. Se o programa terminar ainda
+havendo movimentos possíveis em mais de 2 casos dessa amostra, aumenta-se o N estimado. Caso contrário, decresce um
+pouco o N. O aumento de N é linear e o decrescimento de N é logarítmico. O código pode ser lido na linha 211 do main.c.
+
+	É importante dizer que o N depende da máquina na qual ela está rodando. Portanto rode o algoritmo novamente no seu
+computador e veja os números diferentes!
+
+**resultados no nosso computador**: Intel i5-6200U, 8GB DDR4 2300MHz
+Para v_size = 5 e v_size = 11, um número que apareceu frequentemente ao rodar o algoritmo de annealing foi N ~ 30.000.
+Esse número acerta cerca de 98% das vezes (ou seja, apenas 2% das vezes o counter estourou N embora os sapinhos ainda
+pudessem pular).
+
+Para v_size = 101, o algoritmo encontra um número N ~ 17.000 que acerta 89.5% das simulações.
+
+#### Rodando o programa
+O programa pode ser rodado simplesmente utilizando o comando:
+	
+		$ make run
+
+ele irá compilar o programa e já executá-lo com tamanho do lago = 5 e N = 100000 (definido em frog.h).
+Para simplesmente rodar o programa, é possível usar:
+
+		$ make
+    
+Com o programa agora já compilado, a utilização é:
+
+		$ ./main POND_SIZE [anneal]
+    
+onde POND_SIZE é um inteiro positivo ímpar (v_size). 'anneal' é uma opção de rodar o algoritmo de annealing 
+no tamanho do vetor. Exemplo:
+
+		$ ./main 11 anneal
