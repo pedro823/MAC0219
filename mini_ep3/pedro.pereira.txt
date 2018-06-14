@@ -1,0 +1,55 @@
++------------------------------------------------------------------------------+
+#                         Pedro Pereira n.USP 9778794                          #
+#                              MAC0219: Mini-EP3                               #
+#                                  Relatório                                   #
++------------------------------------------------------------------------------+
+
++------------------------------------------------------------------------------+
+|                                Especifiações                                 |
++------------------------------------------------------------------------------+
+Especificações do meu computador:
+CPU: Intel i5-6200U Dual-core Hyperthreaded @ 2.7GHz
+RAM: 8GB DDR4 @ 2133MHz
+
++------------------------------------------------------------------------------+
+|                                  Definições                                  |
++------------------------------------------------------------------------------+
+    Seja N o tamanho do vetor e t o número de threads (especificados na entrada
+do contention.sh). Seja x o número de IFs no código em C gerado no
+contention.sh.
+
++------------------------------------------------------------------------------+
+|                                  Conclusão                                   |
++------------------------------------------------------------------------------+
+A diferença que um IF faz é enorme. Em N = 10^9 e t > 2, quando x = 0, o
+programa demora em torno de 6 minutos. Com um IF antes do mutex, ou seja, x = 1,
+o programa passa a demorar menos que 4 segundos. O ato de deixar threads
+esperando por mutexes deixa o programa muito, muito pior que single-core.
+Removendo a contenção, ou seja, botando um ou mais IFs antes da mutex ajuda
+muito o tempo do programa.
+
++------------------------------------------------------------------------------+
+|                                  Resultados                                  |
++------------------------------------------------------------------------------+
+
+Essa tabela foi gerada por um programa em ruby que chamava o contention.sh. Para
+cada N diferente, o programa calculou o melhor número de threads para usar no
+vetor de tal tamanho, assim como a melhor quantidade de IFs para aquele número
+de threads. Esses números foram conseguidos através de testes.
+
+N                := Tamanho do vetor
+best_time        := O melhor tempo, em segundos, de uma iteração em um vetor
+                    daquele tamanho
+best_num_threads := O número de threads que gerou o melhor tempo
+best_ifs         := O número de IFs no código que gerou o melhor tempo
+
+N = 1          best_time=0.0      best_num_threads=1  best_ifs=0
+N = 10         best_time=0.0      best_num_threads=1  best_ifs=0
+N = 100        best_time=1.0e-06  best_num_threads=1  best_ifs=1
+N = 1000       best_time=2.0e-06  best_num_threads=3  best_ifs=1
+N = 10000      best_time=1.4e-05  best_num_threads=3  best_ifs=2
+N = 100000     best_time=0.000123 best_num_threads=3  best_ifs=4
+N = 1000000    best_time=0.001146 best_num_threads=15 best_ifs=4
+N = 10000000   best_time=0.010744 best_num_threads=15 best_ifs=2
+N = 100000000  best_time=0.101787 best_num_threads=7  best_ifs=6
+N = 1000000000 best_time=1.014968 best_num_threads=11 best_ifs=1

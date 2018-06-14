@@ -1,0 +1,30 @@
+Ricart-Agrawala
+
+int my_num <- 0
+set deferred_nodes = {}
+int highest_num <- 0
+boolean requestCS <- false
+
+Main
+  loop forever
+    [non-critical section]
+    requestCS <- true
+    my_num <- highest_num + 1
+    for i in all other nodes:
+      send(request, i, myID, myNum)
+    await replies from all other nodes
+    [Critical Section]
+    requestCS <- false
+    for i in deferred_nodes:
+      remove i from deferred_nodes
+      send(reply, i, myID)
+
+Receive:
+  int source, requested_num
+  loop forever
+    receive(request, source, request_num)
+    highest_num <- max(highest_num, request_num)
+    if not requestCS or requested_num < my_num or (requested_num = my_id and source < my_id):
+      send(reply, source, my_id)
+    else:
+      add source to deffered_nodes
