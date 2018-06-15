@@ -4,8 +4,6 @@
 #include <stdexcept>
 #include "io.hpp"
 
-#include <iostream>
-
 #define debug asm("int $3")
 
 using namespace std;
@@ -111,8 +109,8 @@ Matrices readMatricesFromFile(const char *fileName) {
 
 void allocateMatricesToCuda(Matrices m) {
     int *otherV;
-    cudaMallocManaged(&otherV, m.n * sizeof(int));
-    for (long long i = 0; i < m.n; i++) {
+    cudaMallocManaged(&otherV, m.length * sizeof(int));
+    for (long long i = 0; i < m.length; i++) {
         otherV[i] = m.v[i];
     }
     delete[] m.v;
