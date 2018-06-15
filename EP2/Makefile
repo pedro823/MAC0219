@@ -1,6 +1,6 @@
 .PHONY: clean
 
-test: io.o test.o min.o
+test: io.o test.o min.o error_handler.o
 	nvcc $^ -o $@
 
 clean:

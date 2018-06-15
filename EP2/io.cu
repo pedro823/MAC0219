@@ -3,6 +3,7 @@
 #include <string>
 #include <stdexcept>
 #include "io.hpp"
+#include "error_handler.hpp"
 
 #define debug asm("int $3")
 
@@ -103,16 +104,14 @@ Matrices readMatricesFromFile(const char *fileName) {
     }
     Matrices result;
     result.v = v;
+    result.dv = NULL;
     result.length = 9 * numberOfMatrices;
     return result;
 }
 
 void allocateMatricesToCuda(Matrices m) {
-    int *otherV;
-    cudaMallocManaged(&otherV, m.length * sizeof(int));
-    for (long long i = 0; i < m.length; i++) {
-        otherV[i] = m.v[i];
-    }
-    delete[] m.v;
-    m.v = otherV;
+    cudaMallocManaged(&(m.dv), m.length * sizeof(int));
+    errorCheck();
+    cudaMemcpy(m.dv, m.v, m.length * sizeof(int), cudaMemcpyHostToDevice);
+    errorCheck();
 }

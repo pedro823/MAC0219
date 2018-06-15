@@ -6,6 +6,7 @@
 
 typedef struct {
     int *v;           // Matrices vector, contains flattened matrices
+    int *dv;          // Matrices vector inside CUDA device
     long long length; // the length of all the matrices combined.
 } Matrices;
 
