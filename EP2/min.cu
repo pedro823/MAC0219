@@ -46,7 +46,7 @@ void cudaReduction(Matrices m) {
     for (unsigned int stride = blockDim.x; stride > 0; stride /= 2) {
         __syncthreads();
         if (tid < stride)
-            sdata[tid] += sdata[tid + stride];
+            sdata[tid] = min(sdata[tid], sdata[tid + stride]);
     }
     __syncthreads();
     
