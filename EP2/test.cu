@@ -41,10 +41,10 @@ int main() {
     cout << endl;
 
     
-    cudaReduction<<<1, 1>>>(a);
+    cudaReduction<<<a.length, 288>>>(a);
     errorCheck();
 
-    cout << "ALO --> " << a.v[0] << '\n';
+    cout << "ALO --> " << a.dv[0] << '\n';
     cout << endl;
 
     return 0;

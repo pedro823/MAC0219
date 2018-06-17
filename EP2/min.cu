@@ -20,20 +20,24 @@ void sequentialReduction(Matrices m) {
 
 __global__
 void cudaReduction(Matrices m) {
-    //unsigned int tid = threadIdx.x;
-
-    for (int start = 0; start < 9; start++) {
-        for (int i = start; i < m.length; i += 9) {
-            m.dv[start] = min(m.dv[start], m.dv[i]);
-            printf("JOVEM Min between %d %d --> %d\n", m.dv[start], m.dv[i], min(m.dv[start], m.dv[i]));
+    extern __shared__ int sdata[];
+    // each thread loads one element from global to shared mem
+    unsigned int tid = threadIdx.x;
+    unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < m.length)
+        sdata[tid] = m.dv[i];
+    __syncthreads();
+    
+    // do reduction in shared mem
+    for (unsigned int s=1; s < blockDim.x; s *= 2) {
+        if (tid % (2*s) == 0) {
+            sdata[tid] += sdata[tid + s];
         }
+        __syncthreads();
     }
-
-    printf("RESULT: \n\n");
-    for (int i = 0; i < 9; i++) {
-        if (i % 3 == 0) printf("\n");
-        printf("%d ", m.dv[i]);
-    }
-
-    printf("\n");
+    
+    // write result for this block to global mem\
+    if (blockIdx.x < m.length)
+        if (tid == 0) m.dv[blockIdx.x] = sdata[0];
+    
 }
