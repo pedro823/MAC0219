@@ -7,6 +7,11 @@ using namespace std;
 
 int main() {
     Matrices a = readMatricesFromFile("asd.txt");
+
+    for (int i = 0; i < a.length; i++) {
+        cout << a.v[i] << " ";
+    }
+    cout << endl;
     
 //    for (int k = 0; k < a.length; k += 9) {
 //        for (int i = 0; i < 9; i++) {
@@ -29,23 +34,23 @@ int main() {
 //    delete[] a.v;
 
   
-    a = readMatricesFromFile("asd.txt");
-    
-    for (int i = 0; i < a.length; i++) {
-        cout << a.v[i] << " ";
-    }
-    cout << endl;
-    
-    allocateMatricesToCuda(a);
-
-    cout << endl;
-
-    
-    cudaReduction<<<1, 288>>>(a);
-    errorCheck();
-
-    cout << "ALO --> " << a.dv[0] << '\n';
-    cout << endl;
-
-    return 0;
+//    a = readMatricesFromFile("asd.txt");
+//    
+//    for (int i = 0; i < a.length; i++) {
+//        cout << a.v[i] << " ";
+//    }
+//    cout << endl;
+//    
+//    allocateMatricesToCuda(a);
+//
+//    cout << endl;
+//
+//    
+//    cudaReduction<<<1, 288>>>(a);
+//    errorCheck();
+//
+//    cout << "ALO --> " << a.dv[0] << '\n';
+//    cout << endl;
+//
+//    return 0;
 }

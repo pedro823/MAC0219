@@ -53,9 +53,9 @@ Matrices readMatricesFromFile(const char *fileName) {
                     throw runtime_error(err.str());
                 }
                 else {
-                    v[index] = a;
-                    v[index + 1] = b;
-                    v[index + 2] = c;
+                    v[(matrixLine * 3) * numberOfMatrices + currentMatrix] = a;
+                    v[(matrixLine * 3 + 1) * numberOfMatrices + currentMatrix] = b;
+                    v[(matrixLine * 3 + 2) * numberOfMatrices + currentMatrix] = c;
                     index += 3;
                     if (matrixLine == 2) {
                         // go to asterisks
