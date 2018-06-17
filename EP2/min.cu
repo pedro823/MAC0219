@@ -21,22 +21,37 @@ void sequentialReduction(Matrices m) {
 __global__
 void cudaReduction(Matrices m) {
     // each thread loads one element from global to shared mem
-    int tid = threadIdx.x;
-    int n = m.length;
-    int start = (tid * n) / 288;
-    int end = (tid * (n + 1)) / 288;
+    __shared__ int sdata[2 * 288];
     
-    for (int s = start; s < end; s++) {
-        m.dv[start] = min(m.dv[start], m.dv[end]);
-    }    
+    int tid = threadIdx.x;
+    int globalId = blockIdx.x*blockDim.x + threadIdx.x;
+    int n = m.length;
+    int start = 2 * blockIdx.x * blockDim.x;
 
-    __syncthreads();
-
-    if (tid == 0) {
-        for (int k = 0; k < 288; k++) {
-            m.dv[0] = min(m.dv[0], m.dv[(k * n) / 288] );
-        }
+    if ((start + tid) < n) {
+        sdata[tid] = m.dv[start + tid];
+    }
+    else {
+        sdata[tid] = 0.0;
+    }
+    
+    if ((start + blockDim.x + tid) < n) {
+        sdata[blockDim.x + tid] = m.dv[start + blockDim.x + tid];
+    }
+    else {
+        sdata[blockDim.x + tid] = 0.0;
     }
 
+    // Traverse reduction tree
+    for (unsigned int stride = blockDim.x; stride > 0; stride /= 2) {
+        __syncthreads();
+        if (tid < stride)
+            sdata[tid] += sdata[tid + stride];
+    }
     __syncthreads();
+    
+    // Write the computed sum of the block to the output vector at correct index
+    if (tid == 0 && (globalId*2) < n) {
+        m.dv[blockIdx.x] = sdata[tid];
+    }
 }
