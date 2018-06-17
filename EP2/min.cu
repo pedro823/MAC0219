@@ -20,24 +20,23 @@ void sequentialReduction(Matrices m) {
 
 __global__
 void cudaReduction(Matrices m) {
-    extern __shared__ int sdata[];
     // each thread loads one element from global to shared mem
-    unsigned int tid = threadIdx.x;
-    unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < m.length)
-        sdata[tid] = m.dv[i];
+    int tid = threadIdx.x;
+    int n = m.length;
+    int start = (tid * n) / 288;
+    int end = (tid * (n + 1)) / 288;
+    
+    for (int s = start; s < end; s++) {
+        m.dv[start] = min(m.dv[start], m.dv[end]);
+    }    
+
     __syncthreads();
-    
-    // do reduction in shared mem
-    for (unsigned int s=1; s < blockDim.x; s *= 2) {
-        if (tid % (2*s) == 0) {
-            sdata[tid] += sdata[tid + s];
+
+    if (tid == 0) {
+        for (int k = 0; k < 288; k++) {
+            m.dv[0] = min(m.dv[0], m.dv[(k * n) / 288] );
         }
-        __syncthreads();
     }
-    
-    // write result for this block to global mem\
-    if (blockIdx.x < m.length)
-        if (tid == 0) m.dv[blockIdx.x] = sdata[0];
-    
+
+    __syncthreads();
 }

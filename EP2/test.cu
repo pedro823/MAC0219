@@ -41,7 +41,7 @@ int main() {
     cout << endl;
 
     
-    cudaReduction<<<a.length, 288>>>(a);
+    cudaReduction<<<1, 288>>>(a);
     errorCheck();
 
     cout << "ALO --> " << a.dv[0] << '\n';
