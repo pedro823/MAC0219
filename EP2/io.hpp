@@ -22,4 +22,4 @@ Matrices readMatricesFromFile(const char *fileName);
     Throws:
         runtime_error: If matrix could not be allocated.
   --*/
-void allocateMatricesToCuda(Matrices *m);
+void allocateMatricesToCuda(Matrices& m);

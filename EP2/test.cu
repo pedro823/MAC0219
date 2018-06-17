@@ -36,7 +36,7 @@ int main() {
     }
     cout << endl;
     
-    allocateMatricesToCuda(&a);
+    allocateMatricesToCuda(a);
 
     cout << endl;
 
