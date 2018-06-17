@@ -19,8 +19,7 @@ Matrices readMatricesFromFile(const char *fileName);
 
 /*--
     transfers allocated vector to CUDA shared memory.
-    DANGER: Frees original memory.
     Throws:
         runtime_error: If matrix could not be allocated.
   --*/
-void allocateMatricesToCuda(Matrices m);
+void allocateMatricesToCuda(Matrices *m);

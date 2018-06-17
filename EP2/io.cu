@@ -109,9 +109,9 @@ Matrices readMatricesFromFile(const char *fileName) {
     return result;
 }
 
-void allocateMatricesToCuda(Matrices m) {
-    cudaMallocManaged(&(m.dv), m.length * sizeof(int));
+void allocateMatricesToCuda(Matrices* m) {
+    cudaMallocManaged(&(m->dv), m->length * sizeof(int));
     errorCheck();
-    cudaMemcpy(m.dv, m.v, m.length * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(m->dv, m->v, m->length * sizeof(int), cudaMemcpyHostToDevice);
     errorCheck();
 }
