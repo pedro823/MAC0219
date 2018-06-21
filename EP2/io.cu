@@ -21,7 +21,7 @@ Matrices readMatricesFromFile(const char *fileName) {
     int matrixLine = 0;
     long long fileLine = 0;
     // 2d matrices flattened in a vector
-    int *v;
+    int ** v = (int **)malloc(sizeof(int *) * 9);
     long long index = 0;
     long long numberOfMatrices, currentMatrix = -1;
     bool doContinue = true;
@@ -40,7 +40,8 @@ Matrices readMatricesFromFile(const char *fileName) {
                 else {
                     numberOfMatrices = n;
                     // 9 numbers per matrix
-                    v = new int[9 * n];
+                    for (int i = 0; i < 9; i++)
+                        v[i] = (int *)malloc(sizeof(int) * n);;
                     state = 2;
                 }
                 break;
@@ -53,9 +54,14 @@ Matrices readMatricesFromFile(const char *fileName) {
                     throw runtime_error(err.str());
                 }
                 else {
-                    v[(matrixLine * 3) * numberOfMatrices + currentMatrix] = a;
-                    v[(matrixLine * 3 + 1) * numberOfMatrices + currentMatrix] = b;
-                    v[(matrixLine * 3 + 2) * numberOfMatrices + currentMatrix] = c;
+                    v[(matrixLine) * 3][currentMatrix] = a;
+                    v[(matrixLine) * 3 + 1][currentMatrix] = b;
+                    v[(matrixLine) * 3 + 2][currentMatrix] = c;
+
+                    // v[(matrixLine * 3) * numberOfMatrices + currentMatrix] = a;
+                    // v[(matrixLine * 3 + 1) * numberOfMatrices + currentMatrix] = b;
+                    // v[(matrixLine * 3 + 2) * numberOfMatrices + currentMatrix] = c;
+
                     index += 3;
                     if (matrixLine == 2) {
                         // go to asterisks
@@ -102,16 +108,23 @@ Matrices readMatricesFromFile(const char *fileName) {
             << ": could not read matrices from " << fileName;
         throw runtime_error(err.str());
     }
+    
     Matrices result;
-    result.v = v;
-    result.dv = NULL;
-    result.length = 9 * numberOfMatrices;
+    result.v = (int **)malloc(sizeof(int *) * 9);
+    result.dv = (int **)malloc(sizeof(int *) * 9);
+    for (int i = 0; i < 9; i++) {
+        result.v[i] = v[i];
+        result.dv[i] = NULL;
+    }
+    result.length = numberOfMatrices;
     return result;
 }
 
 void allocateMatricesToCuda(Matrices& m) {
-    cudaMallocManaged(&(m.dv), m.length * sizeof(int));
-    errorCheck();
-    cudaMemcpy(m.dv, m.v, m.length * sizeof(int), cudaMemcpyHostToDevice);
-    errorCheck();
+    for (int i = 0; i < 9; i++) {
+        cudaMallocManaged(&(m.dv[i]), m.length * sizeof(int));
+        errorCheck();
+        cudaMemcpy(m.dv[i], m.v[i], m.length * sizeof(int), cudaMemcpyHostToDevice);
+        errorCheck();
+    }
 }

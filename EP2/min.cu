@@ -5,53 +5,80 @@
 #include <algorithm>
 using namespace std;
 #include "min.hpp"
- 
+
 int magicMin(int a, int b) {
-	return (a + b - abs(a - b)) >> 1;
+	return (a < b) ? a : b;
 }
 
-void sequentialReduction(Matrices m) {
-    for (int start = 0; start < 9; start++) {
-         for (int i = start; i < m.length; i += 9) {
-            m.v[start] = magicMin(m.v[start], m.v[i]);
-         }
+int sequentialReductionArray(int * v, int n) {
+    int res = v[0];
+    for (int i = 1; i < n; i++) {
+        res = magicMin(res, v[i]);
     }
+    return res;
 }
 
 __global__
-void cudaReduction(Matrices m) {
-    // each thread loads one element from global to shared mem
-    __shared__ int sdata[2 * 288];
-    
+void cudaReduceArray(int * in, int * out, int n) {
+    extern __shared__ int sdata[]; // Array with size BLOCK_NUM
+
     int tid = threadIdx.x;
-    int globalId = blockIdx.x*blockDim.x + threadIdx.x;
-    int n = m.length;
-    int start = 2 * blockIdx.x * blockDim.x;
+    int i = blockIdx.x * blockDim.x * 2 + threadIdx.x;
 
-    if ((start + tid) < n) {
-        sdata[tid] = m.dv[start + tid];
-    }
-    else {
-        sdata[tid] = 0.0;
-    }
+    int cur, nxt;
+    cur = (i < n) ? in[i] : INF;
+    nxt = (i + blockDim.x < n) ? in[i + blockDim.x] : INF;
     
-    if ((start + blockDim.x + tid) < n) {
-        sdata[blockDim.x + tid] = m.dv[start + blockDim.x + tid];
-    }
-    else {
-        sdata[blockDim.x + tid] = 0.0;
-    }
+    sdata[tid] = min(cur, nxt);
 
-    // Traverse reduction tree
-    for (unsigned int stride = blockDim.x; stride > 0; stride /= 2) {
+    __syncthreads();    
+    
+    for (int s = blockDim.x / 2; s > 0; s /= 2) {
+        if (tid < s) {
+            sdata[tid] = min(sdata[tid], sdata[tid+s]);
+        }
         __syncthreads();
-        if (tid < stride)
-            sdata[tid] = min(sdata[tid], sdata[tid + stride]);
     }
-    __syncthreads();
-    
-    // Write the computed sum of the block to the output vector at correct index
-    if (tid == 0 && (globalId*2) < n) {
-        m.dv[blockIdx.x] = sdata[tid];
+
+    if (tid == 0) out[blockIdx.x] = sdata[0];
+}
+
+int * sequentialReductionMatrix(Matrices m) {
+    int * res = (int *)malloc(9 * sizeof(int));
+    for (int i = 0; i < 9; i++) {
+        res[i] = sequentialReductionArray(m.v[i], m.length);
     }
+    return res;
+}
+
+int* cudaReduceMatrix(Matrices m) {
+    int * res = (int *)malloc(9 * sizeof(int));
+    const int THREAD_NUM = 32;
+    const int BLOCK_NUM =  (m.length + 2 * THREAD_NUM - 1)/ (2 * THREAD_NUM);
+
+    for (int i = 0; i < 9; i++) {
+        int * cuda_block_results;
+        int * host_block_results;
+        
+        cudaMalloc(&cuda_block_results, BLOCK_NUM * sizeof(int));
+        errorCheck();
+
+        cudaReduceArray<<<BLOCK_NUM, THREAD_NUM, THREAD_NUM * sizeof(int)>>>(m.dv[i], cuda_block_results, m.length);
+        errorCheck();
+
+        host_block_results = (int *)malloc(BLOCK_NUM * sizeof(int));
+        cudaMemcpy(host_block_results, cuda_block_results, BLOCK_NUM * sizeof(int), cudaMemcpyDeviceToHost);
+        errorCheck();
+
+        res[i] = host_block_results[0];
+        for (int k = 1; k < BLOCK_NUM; k++) {
+            res[i] = min(res[i], host_block_results[k]);            
+        }
+        errorCheck();
+        
+        cudaFree(cuda_block_results);
+        free(host_block_results);
+    }
+
+    return res;
 }

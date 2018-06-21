@@ -2,55 +2,58 @@
 #include "min.hpp"
 #include "error_handler.hpp"
 #include <iostream>
-
+#include <ctime>
+#include <unistd.h>
 using namespace std;
 
-int main() {
-    Matrices a = readMatricesFromFile("asd.txt");
-
-    for (int i = 0; i < a.length; i++) {
-        cout << a.v[i] << " ";
+int main(int argc, char ** argv) {
+    if (argc < 2) {
+        fprintf(stderr, "Not enough arguments");
+        return 1;
     }
-    cout << endl;
+
+    printf("Reading Matrices\n");
+
+    char * matrixFile = argv[1];
+    Matrices a = readMatricesFromFile(matrixFile);
+     
+    allocateMatricesToCuda(a);
+
+    printf("Matrixes in memory\n");
+
+    printf("there are %d matrices\n", a.length);
     
-//    for (int k = 0; k < a.length; k += 9) {
-//        for (int i = 0; i < 9; i++) {
-//            if (i % 3 == 0) cout << '\n';
-//            cout << a.v[k + i] << " ";
-//        }
-//        cout << endl;
-//    }
-//    
-//    sequentialReduction(a);
-//
-// 
-//    cout << "RESULT: \n\n";
-//    for (int i = 0; i < 9; i++) {
-//        if (i % 3 == 0) cout << '\n';
-//        cout << a.v[i] << " ";
-//    }
-//    cout << endl;
+    clock_t begin, end;
+    bool same_ans = true;
+    float elapsed = 0;
 
-//    delete[] a.v;
+    begin = clock();
+    int * cudaAns = cudaReduceMatrix(a);
+    cudaDeviceSynchronize();
+    end = clock();
 
-  
-   a = readMatricesFromFile("asd.txt");
-   
-   for (int i = 0; i < a.length; i++) {
-       cout << a.v[i] << " ";
-   }
-   cout << endl;
-   
-   allocateMatricesToCuda(a);
+    elapsed = (end - begin) / CLOCKS_PER_SEC;
+        
+    printf("Cuda ans -- %.10f Seconds\n", elapsed);
+    for (int i = 0; i < 9; i++) {
+        printf("%d ", cudaAns[i]);
+    }
 
-   cout << endl;
+    begin = clock();
+    int * seqAns  = sequentialReductionMatrix(a);
+    cudaDeviceSynchronize();
+    end = clock();
 
-   
-   cudaReduction<<<288, 288>>>(a);
-   errorCheck();
+    elapsed = (end - begin) / CLOCKS_PER_SEC;
+    
+    printf("\n\nSequential ans -- %.10f Seconds\n", elapsed);
+    for (int i = 0; i < 9; i++) {
+        printf("%d ", seqAns[i]);
+        if (seqAns[i] != cudaAns[i]) same_ans = false;
+    }
+    printf("\n\n");
+    
+    printf("%s\n", (same_ans ? "Cuda is CORRECT" : "Cuda is WRONG"));
 
-   cout << "ALO --> " << a.dv[0] << '\n';
-   cout << endl;
-
-   return 0;
+    return 0;
 }
