@@ -56,29 +56,28 @@ int* cudaReduceMatrix(Matrices m) {
     const int THREAD_NUM = 32;
     const int BLOCK_NUM =  (m.length + 2 * THREAD_NUM - 1)/ (2 * THREAD_NUM);
 
-    for (int i = 0; i < 9; i++) {
-        int * cuda_block_results;
-        int * host_block_results;
+    int * cuda_block_results;
+    int * host_block_results;
+    
+    cudaMalloc(&cuda_block_results, BLOCK_NUM * sizeof(int));
+    host_block_results = (int *)malloc(BLOCK_NUM * sizeof(int));
         
-        cudaMalloc(&cuda_block_results, BLOCK_NUM * sizeof(int));
-        errorCheck();
+    
+    for (int i = 0; i < 9; i++) {
 
         cudaReduceArray<<<BLOCK_NUM, THREAD_NUM, THREAD_NUM * sizeof(int)>>>(m.dv[i], cuda_block_results, m.length);
-        errorCheck();
+        cudaDeviceSynchronize();
 
-        host_block_results = (int *)malloc(BLOCK_NUM * sizeof(int));
         cudaMemcpy(host_block_results, cuda_block_results, BLOCK_NUM * sizeof(int), cudaMemcpyDeviceToHost);
-        errorCheck();
 
         res[i] = host_block_results[0];
         for (int k = 1; k < BLOCK_NUM; k++) {
             res[i] = min(res[i], host_block_results[k]);            
         }
-        errorCheck();
-        
-        cudaFree(cuda_block_results);
-        free(host_block_results);
     }
+
+    cudaFree(cuda_block_results);
+    free(host_block_results);
 
     return res;
 }

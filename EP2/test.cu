@@ -4,6 +4,7 @@
 #include <iostream>
 #include <ctime>
 #include <unistd.h>
+#include <sys/time.h>
 using namespace std;
 
 int main(int argc, char ** argv) {
@@ -23,30 +24,31 @@ int main(int argc, char ** argv) {
 
     printf("there are %d matrices\n", a.length);
     
-    clock_t begin, end;
-    bool same_ans = true;
-    float elapsed = 0;
+    struct timeval begin, end;
 
-    begin = clock();
+    bool same_ans = true;
+    int elapsed = 0;
+
+    gettimeofday(&begin, NULL);
     int * cudaAns = cudaReduceMatrix(a);
     cudaDeviceSynchronize();
-    end = clock();
-
-    elapsed = (end - begin) / CLOCKS_PER_SEC;
+    gettimeofday(&end, NULL);
         
-    printf("Cuda ans -- %.10f Seconds\n", elapsed);
+    elapsed = (end.tv_sec - begin.tv_sec) * 1000000 + (end.tv_usec - begin.tv_usec);
+        
+    printf("Cuda ans -- %d microseconds\n", elapsed);
     for (int i = 0; i < 9; i++) {
         printf("%d ", cudaAns[i]);
     }
 
-    begin = clock();
+    gettimeofday(&begin, NULL);
     int * seqAns  = sequentialReductionMatrix(a);
     cudaDeviceSynchronize();
-    end = clock();
-
-    elapsed = (end - begin) / CLOCKS_PER_SEC;
+    gettimeofday(&end, NULL);
+        
+    elapsed = (end.tv_sec - begin.tv_sec) * 1000000 + (end.tv_usec - begin.tv_usec);
     
-    printf("\n\nSequential ans -- %.10f Seconds\n", elapsed);
+    printf("\n\nSequential ans -- %d microseconds\n", elapsed);
     for (int i = 0; i < 9; i++) {
         printf("%d ", seqAns[i]);
         if (seqAns[i] != cudaAns[i]) same_ans = false;
